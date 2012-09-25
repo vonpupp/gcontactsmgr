@@ -22,8 +22,14 @@
 #   Description:		I migrated to android and I had several contacts issues
 #     I developed this tool with the following purposes:
 #       - Fix unicode escape characters within contacts
-#       - Query which contacts have just some attributes (just email, just phone, neither, etc)
+#       - Unify mobile phone patterns
+#         - Brazil: +55 (41) 9 8765 4321 / +55 9 8765 4321 / +55 1234 5678
+#       - Query for: (and be able to tag them within a group)
+#         - Contacts have just some attributes (just email, just phone, neither, etc)
+#         - Stats for contacts with mobile operators tags (TIM, VIVO, OI, etc)
+#         - Add specific mobile operator (ie: TIM 41, VIVO 15, etc)
 #       - Perhaps syncronize contacts with another google account (using it as an archive for less contacted ones)
+#       - Query the mobile operator (this will require some hackings)
 #       - Learn about Google Contacts API
 #
 #   Limitations:		
@@ -39,6 +45,7 @@ __author__ = 'Albert De La Fuente'
 import sys
 import getopt
 import getpass
+import re
 import atom
 import gdata.contacts.data
 import gdata.contacts.client
@@ -124,13 +131,13 @@ class ContactsSample(object):
       next = feed.GetNextLink()
       feed = None
       if next:
-        if self.PromptOperationShouldContinue():
+        #if self.PromptOperationShouldContinue():
           # Another feed is available, and the user has given us permission
           # to fetch it
           feed = self.gd_client.GetContacts(uri=next.href)
-        else:
+        #else:
           # User has asked us to terminate
-          feed = None
+          #feed = None
 
   def PromptOperationShouldContinue(self):
     """ Display a "Continue" prompt.
@@ -152,6 +159,7 @@ class ContactsSample(object):
   def ListAllContacts(self):
     """Retrieves a list of contacts and displays name and primary email."""
     feed = self.gd_client.GetContacts()
+    #self.PrintContactsFeed(feed)
     self.PrintPaginatedFeed(feed, self.PrintContactsFeed)
 
   def PrintGroupsFeed(self, feed, ctr):
@@ -183,6 +191,9 @@ class ContactsSample(object):
         full_name = entry.name.full_name is None and " " or entry.name.full_name.text
         given_name = entry.name.given_name is None and " " or entry.name.given_name.text
         print '\n%s %s: %s - %s' % (ctr+i+1, full_name, given_name, family_name)
+        m = re.compile('\\\\u00..').search(entry.title.text)
+        if m:
+          print 'SHIT HAPPENS HERE!!!!'
       else:
         print '\n%s %s (title)' % (ctr+i+1, entry.title.text)
       if entry.content:
@@ -274,7 +285,7 @@ class ContactsSample(object):
 #           '5) Delete a contact.\n'
 #           '6) List all of your contact groups.\n'
 #           '7) Query your groups on updated time.\n'
-#           '8) Exit.\n')
+           '8) Exit.\n')
 
   def GetMenuChoice(self, max):
     """Retrieves the menu selection from the user.
@@ -321,8 +332,8 @@ class ContactsSample(object):
         #  self.ListAllGroups()
         #elif choice == 7:
         #  self.QueryGroupsMenu()
-        #elif choice == 8:
-        #  return
+        elif choice == 8:
+          return
 
     except KeyboardInterrupt:
       print '\nGoodbye.'
