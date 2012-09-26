@@ -191,6 +191,28 @@ class ContactsSample(object):
     print selected_entry.name.full_name.text.decode('unicode_escape')
     selected_entry.name.full_name = gdata.data.FullName(text=selected_entry.name.full_name.text.decode('unicode_escape'))
     self.gd_client.Update(selected_entry)
+    
+  def FixFamilyNameUnicodeEntry(self, feed, idx):
+    #feed = self.gd_client.GetContacts()
+    selected_entry = feed.entry[idx]
+    #new_name = raw_input('Enter a new name for the contact: ')
+    if not selected_entry.name:
+      selected_entry.name = gdata.data.Name()
+    print selected_entry.name.family_name.text
+    print selected_entry.name.family_name.text.decode('unicode_escape')
+    selected_entry.name.family_name = gdata.data.FamilyName(text=selected_entry.name.family_name.text.decode('unicode_escape'))
+    self.gd_client.Update(selected_entry)
+
+  def FixGivenNameUnicodeEntry(self, feed, idx):
+    #feed = self.gd_client.GetContacts()
+    selected_entry = feed.entry[idx]
+    #new_name = raw_input('Enter a new name for the contact: ')
+    if not selected_entry.name:
+      selected_entry.name = gdata.data.Name()
+    print selected_entry.name.given_name.text
+    print selected_entry.name.given_name.text.decode('unicode_escape')
+    selected_entry.name.given_name = gdata.data.GivenName(text=selected_entry.name.given_name.text.decode('unicode_escape'))
+    self.gd_client.Update(selected_entry)
 
   def PrintContactsFeed(self, feed, ctr):
     if not feed.entry:
@@ -201,12 +223,24 @@ class ContactsSample(object):
         family_name = entry.name.family_name is None and " " or entry.name.family_name.text
         full_name = entry.name.full_name is None and " " or entry.name.full_name.text
         given_name = entry.name.given_name is None and " " or entry.name.given_name.text
-        m = re.compile('\\\\u00..').search(entry.title.text)
+        m = re.compile('\\\\u0...').search(entry.title.text)
         if m:
           print '\n%s %s: %s - %s' % (ctr+i+1, full_name, given_name, family_name)
           print 'OH..THE DIAPER IS ALMOST FULL!!!'
           print '\nFIXING: %s %s: %s - %s' % (ctr+i+1, full_name.decode('unicode_escape'), given_name.decode('unicode_escape'), family_name.decode('unicode_escape'))
           self.FixUnicodeEntry(feed, i)
+        m = re.compile('\\\\u0...').search(family_name)
+        if m:
+          print '\n%s %s: %s - %s' % (ctr+i+1, full_name, given_name, family_name)
+          print 'OH..PROBLEMS WITH FAMILY NAME!!!'
+          #print '\nFIXING: %s %s: %s - %s' % (ctr+i+1, full_name.decode('unicode_escape'), given_name.decode('unicode_escape'), family_name.decode('unicode_escape'))
+          self.FixFamilyNameUnicodeEntry(feed, i)
+        m = re.compile('\\\\u0...').search(given_name)
+        if m:
+          print '\n%s %s: %s - %s' % (ctr+i+1, full_name, given_name, family_name)
+          print 'OH..PROBLEMS WITH GIVEN NAME!!!'
+          #print '\nFIXING: %s %s: %s - %s' % (ctr+i+1, full_name.decode('unicode_escape'), given_name.decode('unicode_escape'), family_name.decode('unicode_escape'))
+          self.FixGivenNameUnicodeEntry(feed, i)
       else:
         pass
         #print '\n%s %s (title)' % (ctr+i+1, entry.title.text)
